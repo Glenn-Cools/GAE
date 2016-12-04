@@ -39,7 +39,7 @@ public class CarRentalServletContextListener implements ServletContextListener {
 		// If the Hertz car rental company is in the datastore, we assume the
 		// dummy data is available
 
-		// FIXME: use persistence instead
+		//  use persistence instead
 		//return CarRentalModel.get().CRCS.containsKey("Hertz");
 		EntityManager em = EMF.get().createEntityManager();
 		try {
@@ -66,7 +66,7 @@ public class CarRentalServletContextListener implements ServletContextListener {
 			Set<Car> cars = loadData(name, datafile);
 			CarRentalCompany company = new CarRentalCompany(name, cars);
 
-			// FIXME: use persistence instead
+			// use persistence instead
 			//CarRentalModel.get().CRCS.put(name, company);
 
 			em.persist(company);
@@ -83,7 +83,7 @@ public class CarRentalServletContextListener implements ServletContextListener {
 	}
 
 	public static Set<Car> loadData(String name, String datafile) throws NumberFormatException, IOException {
-		// FIXME: adapt the implementation of this method to your entity
+		// adapt the implementation of this method to your entity
 		// structure
 
 		Set<Car> cars = new HashSet<Car>();
