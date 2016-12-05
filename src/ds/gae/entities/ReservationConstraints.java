@@ -21,6 +21,10 @@ public class ReservationConstraints {
 	@Basic
     private String carType;
 	
+	public ReservationConstraints(){
+		
+	}
+	
     public ReservationConstraints(Date start, Date end, String carType){
     	setStartDate(start);
     	setEndDate(end);

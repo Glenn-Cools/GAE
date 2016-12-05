@@ -23,8 +23,12 @@ public class Quote {
     /***************
 	 * CONSTRUCTOR *
 	 ***************/
+    
+    public Quote(){
+    	
+    }
 
-    Quote(String carRenter, Date start, Date end, String rentalCompany, String carType, double rentalPrice) {
+    public Quote(String carRenter, Date start, Date end, String rentalCompany, String carType, double rentalPrice) {
         this.carRenter = carRenter;
         this.startDate = start;
         this.endDate = end;

@@ -56,11 +56,14 @@ public class CarRentalModel {
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(crcName)) {
-					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", CarType.class);
+					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
 					query.setParameter("company", crc.getKey());
-					List<CarType> types =  query.getResultList();
-					for (CarType type: types){
-						typeNames.add(type.getName());
+					List<Map<String, CarType>> typeMaps = query.getResultList();
+					for (Map<String, CarType> typeMap : typeMaps) {
+						for (CarType type : typeMap.values()) {
+							typeNames.add(type.getName());
+						}
+
 					}
 					return typeNames;
 				}
@@ -70,7 +73,7 @@ public class CarRentalModel {
 		} finally {
 			em.close();
 		}
-		
+
 	}
 
 	/**
@@ -108,7 +111,7 @@ public class CarRentalModel {
 	 */
 	public Quote createQuote(String company, String renterName, ReservationConstraints constraints)
 			throws ReservationException {
-		//  use persistence instead
+		// use persistence instead
 
 		/*
 		 * CarRentalCompany crc = CRCS.get(company); Quote out = null;
@@ -172,7 +175,7 @@ public class CarRentalModel {
 	 */
 	public List<Reservation> confirmQuotes(List<Quote> quotes) throws ReservationException {
 		ArrayList<Reservation> done = new ArrayList<Reservation>();
-		
+
 		try {
 			for (Quote q : quotes) {
 				done.add(this.confirmQuote(q));
@@ -188,7 +191,7 @@ public class CarRentalModel {
 	}
 
 	public void cancelReservation(Reservation res) {
-		
+
 		for (CarRentalCompany crc : getAllRentals()) {
 			if (crc.getName().equals(res.getRentalCompany())) {
 				crc.cancelReservation(res);
@@ -205,7 +208,7 @@ public class CarRentalModel {
 	 * @return the list of reservations of the given car renter
 	 */
 	public List<Reservation> getReservations(String renter) {
-		//  use persistence instead
+		// use persistence instead
 
 		/*
 		 * List<Reservation> out = new ArrayList<Reservation>();
@@ -218,25 +221,32 @@ public class CarRentalModel {
 		 */
 
 		List<Reservation> out = new ArrayList<Reservation>();
+		EntityManager em = EMF.get().createEntityManager();
+		Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+		Query query2 = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
 
-		for (CarRentalCompany crc : getAllRentals()) {
-			EntityManager em = EMF.get().createEntityManager();
-			List<Car> cars;
-			try {
-				Query query = em.createNamedQuery("Rental.FindAllCarsForCompany", Car.class);
+		try {
+			for (CarRentalCompany crc : getAllRentals()) {
 				query.setParameter("company", crc.getKey());
-				cars = query.getResultList();
-
-			} finally {
-				em.close();
-			}
-			for (Car c : cars) {
-				for (Reservation r : c.getReservations()) {
-					if (r.getCarRenter().equals(renter)) {
-						out.add(r);
+				List<Map<String, CarType>> typeMaps = query.getResultList();
+				for (Map<String, CarType> typeMap : typeMaps) {
+					for (CarType type : typeMap.values()) {
+						query2.setParameter("typeKey", type.getKey());
+						List<Set<Car>> carSets = query2.getResultList();
+						for (Set<Car> carSet : carSets) {
+							for (Car c : carSet.toArray(new Car[carSet.size()])) {
+								for (Reservation r : c.getReservations()) {
+									if (r.getCarRenter().equals(renter)) {
+										out.add(r);
+									}
+								}
+							}
+						}
 					}
 				}
 			}
+		} finally {
+			em.close();
 		}
 
 		return out;
@@ -251,21 +261,27 @@ public class CarRentalModel {
 	 * @return The list of car types in the given car rental company.
 	 */
 	public Collection<CarType> getCarTypesOfCarRentalCompany(String crcName) {
-		//  use persistence instead
+		// use persistence instead
 
 		/*
 		 * CarRentalCompany crc = CRCS.get(crcName); Collection<CarType> out =
 		 * new ArrayList<CarType>(crc.getAllCarTypes()); return out;
 		 */
 
-		Collection<CarType> types = null;
+		Collection<CarType> types = new ArrayList<CarType>();
 		EntityManager em = EMF.get().createEntityManager();
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(crcName)) {
-					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", CarType.class);
+					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
 					query.setParameter("company", crc.getKey());
-					types = new ArrayList<CarType>(query.getResultList());
+					List<Map<String, CarType>> typeMaps = query.getResultList();
+					for (Map<String, CarType> typeMap : typeMaps) {
+						for (CarType type : typeMap.values()) {
+							types.add(type);
+
+						}
+					}
 					return types;
 				}
 			}
@@ -322,7 +338,7 @@ public class CarRentalModel {
 		// use persistence instead
 
 		/*
-		 * List<Car> out = new ArrayList<Car>(); for (CarRentalCompany crc :
+		 * List</> out = new ArrayList<Car>(); for (CarRentalCompany crc :
 		 * CRCS.values()) { for (Car c : crc.getCars()) { if (c.getType() ==
 		 * carType) { out.add(c); } } } return out;
 		 */
@@ -331,12 +347,23 @@ public class CarRentalModel {
 		EntityManager em = EMF.get().createEntityManager();
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
-				Query query = em.createNamedQuery("Rental.FindAllCarsForCompany", Car.class);
+				// Query query =
+				// em.createNamedQuery("Rental.FindAllCarsForCompany",
+				// Car.class);
+				Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
 				query.setParameter("company", crc.getKey());
-				List<Car> cars = query.getResultList();
-				for (Car c : cars) {
-					if (c.getType() == carType) {
-						out.add(c);
+
+				List<Map<String, CarType>> typeMaps = query.getResultList();
+				for (Map<String, CarType> typeMap : typeMaps) {
+					for (CarType type : typeMap.values()) {
+						if (type.getName().equals(carType)) {
+							Query query2 = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
+							query2.setParameter("typeKey", type.getKey());
+							List<Set<Car>> carSets = query2.getResultList();
+							for (Set<Car> carSet : carSets) {
+								out.addAll(carSet);
+							}
+						}
 					}
 				}
 			}

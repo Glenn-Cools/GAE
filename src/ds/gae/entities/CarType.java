@@ -6,7 +6,10 @@ import javax.persistence.*;
 
 import com.google.appengine.api.datastore.Key;
 
+import ds.gae.EMF;
+
 @Entity
+@NamedQuery(name = "CarType.FindAllCarsForType", query = "SELECT type.cars FROM CarType type WHERE type.key = :typeKey")
 public class CarType {
     
 	@Id
@@ -29,6 +32,9 @@ public class CarType {
     /***************
 	 * CONSTRUCTOR *
 	 ***************/
+    public CarType(){
+    	
+    }
     
     public CarType(String name, int nbOfSeats, float trunkSpace, double rentalPricePerDay, boolean smokingAllowed) {
         this.name = name;
@@ -36,6 +42,21 @@ public class CarType {
         this.trunkSpace = trunkSpace;
         this.rentalPricePerDay = rentalPricePerDay;
         this.smokingAllowed = smokingAllowed;
+    }
+    
+    public Key getKey(){
+    	return key;
+    }
+    
+    public void addCars(Set<Car> carSet){
+    	EntityManager em = EMF.get().createEntityManager();
+    	try{
+    		for(Car c : carSet)
+    			em.persist(c);    		
+    	}finally {
+			em.close();
+		}
+    	cars.addAll(carSet);
     }
 
     public String getName() {

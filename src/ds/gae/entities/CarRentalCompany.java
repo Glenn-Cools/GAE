@@ -16,14 +16,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import ds.gae.EMF;
 import ds.gae.ReservationException;
 
 @Entity
 @NamedQueries({ @NamedQuery(name = "Rental.FindAll", query = "SELECT com FROM CarRentalCompany com"),
 		@NamedQuery(name = "Rental.FindAllCompanyNames", query = "SELECT com.name FROM CarRentalCompany com"),
-		@NamedQuery(name = "Rental.FindAllCarTypesForCompany", query = "SELECT com.carTypes FROM CarRentalCompany com where com.key = :company"),
-		@NamedQuery(name = "Rental.FindAllCarsForCompany", query = "SELECT com.cars FROM CarRentalCompany com where com.key = :company")
-
+		@NamedQuery(name = "Rental.FindAllCarTypesForCompany", query = "SELECT com.carTypes FROM CarRentalCompany com WHERE com.key = :company")
 })
 public class CarRentalCompany {
 
@@ -34,8 +33,8 @@ public class CarRentalCompany {
 	private Key key;
 	@Basic
 	private String name;
-	// @OneToMany(cascade=CascadeType.ALL)
-	@OneToMany(cascade = CascadeType.PERSIST)
+	//@OneToMany(cascade=CascadeType.ALL)
+	//@OneToMany(cascade = CascadeType.PERSIST)
 	private Set<Car> cars;
 	// @Basic
 	@OneToMany(cascade = CascadeType.ALL)
@@ -44,6 +43,9 @@ public class CarRentalCompany {
 	/***************
 	 * CONSTRUCTOR *
 	 ***************/
+	public CarRentalCompany() {
+
+	}
 
 	public CarRentalCompany(String name, Set<Car> cars) {
 		logger.log(Level.INFO, "<{0}> Car Rental Company {0} starting up...", name);
@@ -65,7 +67,7 @@ public class CarRentalCompany {
 		return name;
 	}
 
-	private void setName(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 
@@ -73,26 +75,42 @@ public class CarRentalCompany {
 	 * CAR TYPES *
 	 *************/
 
+	private Map<String, CarType> getCarTypesQuery() {
+		EntityManager em = EMF.get().createEntityManager();
+		try {
+			Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+			query.setParameter("company", this.getKey());
+
+			List<Map<String, CarType>> carTypesList = query.getResultList();
+			if (!carTypesList.isEmpty()) {
+				return carTypesList.get(0);
+			}
+			return null;
+		} finally {
+			em.close();
+		}
+	}
+
 	public Collection<CarType> getAllCarTypes() {
-		return carTypes.values();
+		return getCarTypesQuery().values();
 	}
 
 	public CarType getCarType(String carTypeName) {
-		if (carTypes.containsKey(carTypeName))
-			return carTypes.get(carTypeName);
+		if (getCarTypesQuery().containsKey(carTypeName))
+			return getCarTypesQuery().get(carTypeName);
 		throw new IllegalArgumentException("<" + carTypeName + "> No car type of name " + carTypeName);
 	}
 
 	public boolean isAvailable(String carTypeName, Date start, Date end) {
 		logger.log(Level.INFO, "<{0}> Checking availability for car type {1}", new Object[] { name, carTypeName });
-		if (carTypes.containsKey(carTypeName))
-			return getAvailableCarTypes(start, end).contains(carTypes.get(carTypeName));
+		if (getCarTypesQuery().containsKey(carTypeName))
+			return getAvailableCarTypes(start, end).contains(getCarTypesQuery().get(carTypeName));
 		throw new IllegalArgumentException("<" + carTypeName + "> No car type of name " + carTypeName);
 	}
 
 	public Set<CarType> getAvailableCarTypes(Date start, Date end) {
 		Set<CarType> availableCarTypes = new HashSet<CarType>();
-		for (Car car : cars) {
+		for (Car car : getCarsQuery()) {
 			if (car.isAvailable(start, end)) {
 				availableCarTypes.add(car.getType());
 			}
@@ -105,7 +123,7 @@ public class CarRentalCompany {
 	 *********/
 
 	private Car getCar(int uid) {
-		for (Car car : cars) {
+		for (Car car : getCarsQuery()) {
 			if (car.getId() == uid)
 				return car;
 		}
@@ -116,9 +134,32 @@ public class CarRentalCompany {
 		return cars;
 	}
 
+	public Set<Car> getCarsQuery() {
+		EntityManager em = EMF.get().createEntityManager();
+		Query query = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
+		Set<Car> carSet = new HashSet<Car>();
+		try {
+			for (CarType type : getCarTypesQuery().values()) {
+				query.setParameter("typeKey", type.getKey());
+				List<Set<Car>> carSets = query.getResultList();
+				System.out.print(carSets.size());
+				if (!carSets.isEmpty()) {
+					carSet.addAll(carSets.get(0));
+				}
+			}
+			System.out.print("YOOOOOOOOOOOOOLOOOOOOOOOOOOOOOOOOOOOOOO");
+			for(Car c: carSet){
+			System.out.println(c.getId());
+			}
+			return carSet;
+		} finally {
+			em.close();
+		}
+	}
+
 	private List<Car> getAvailableCars(String carType, Date start, Date end) {
 		List<Car> availableCars = new LinkedList<Car>();
-		for (Car car : cars) {
+		for (Car car : getCarsQuery()) {
 			if (car.getType().getName().equals(carType) && car.isAvailable(start, end)) {
 				availableCars.add(car);
 			}

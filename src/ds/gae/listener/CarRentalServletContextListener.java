@@ -85,7 +85,7 @@ public class CarRentalServletContextListener implements ServletContextListener {
 	public static Set<Car> loadData(String name, String datafile) throws NumberFormatException, IOException {
 		// adapt the implementation of this method to your entity
 		// structure
-
+		
 		Set<Car> cars = new HashSet<Car>();
 		int carId = 1;
 
@@ -110,6 +110,17 @@ public class CarRentalServletContextListener implements ServletContextListener {
 			for (int i = Integer.parseInt(csvReader.nextToken()); i > 0; i--) {
 				cars.add(new Car(carId++, type));
 			}
+			
+			//Add cars to the corresponding type
+			
+			type.addCars(cars);
+			EntityManager em = EMF.get().createEntityManager();
+			try{
+				em.persist(type);
+			}finally {
+				em.close();
+			}
+			
 		}
 
 		return cars;
