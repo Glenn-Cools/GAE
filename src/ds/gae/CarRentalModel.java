@@ -56,11 +56,11 @@ public class CarRentalModel {
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(crcName)) {
-					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Set.class);
 					query.setParameter("company", crc.getKey());
-					List<Map<String, CarType>> typeMaps = query.getResultList();
-					for (Map<String, CarType> typeMap : typeMaps) {
-						for (CarType type : typeMap.values()) {
+					List<Set<CarType>> typeMaps = query.getResultList();
+					for (Set<CarType> typeMap : typeMaps) {
+						for (CarType type : typeMap) {
 							typeNames.add(type.getName());
 						}
 
@@ -222,19 +222,20 @@ public class CarRentalModel {
 
 		List<Reservation> out = new ArrayList<Reservation>();
 		EntityManager em = EMF.get().createEntityManager();
-		Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+		Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Set.class);
 		Query query2 = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
 
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				query.setParameter("company", crc.getKey());
-				List<Map<String, CarType>> typeMaps = query.getResultList();
-				for (Map<String, CarType> typeMap : typeMaps) {
-					for (CarType type : typeMap.values()) {
-						query2.setParameter("typeKey", type.getKey());
+				List<Set<CarType>> typeMaps = query.getResultList();
+				for (Set<CarType> typeMap : typeMaps) {
+					for (CarType type : typeMap) {
+						query2.setParameter("typeKey", type.getKey());	
 						List<Set<Car>> carSets = query2.getResultList();
 						for (Set<Car> carSet : carSets) {
 							for (Car c : carSet.toArray(new Car[carSet.size()])) {
+								System.out.println("KDFJQLKDSJFKDSQJFLKJDSKFJQSKLDJFLKSJDLFKQSKJDF    " + c);
 								for (Reservation r : c.getReservations()) {
 									if (r.getCarRenter().equals(renter)) {
 										out.add(r);
@@ -273,11 +274,11 @@ public class CarRentalModel {
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(crcName)) {
-					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+					Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Set.class);
 					query.setParameter("company", crc.getKey());
-					List<Map<String, CarType>> typeMaps = query.getResultList();
-					for (Map<String, CarType> typeMap : typeMaps) {
-						for (CarType type : typeMap.values()) {
+					List<Set<CarType>> typeMaps = query.getResultList();
+					for (Set<CarType> typeMap : typeMaps) {
+						for (CarType type : typeMap) {
 							types.add(type);
 
 						}
@@ -350,12 +351,12 @@ public class CarRentalModel {
 				// Query query =
 				// em.createNamedQuery("Rental.FindAllCarsForCompany",
 				// Car.class);
-				Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
+				Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Set.class);
 				query.setParameter("company", crc.getKey());
 
-				List<Map<String, CarType>> typeMaps = query.getResultList();
-				for (Map<String, CarType> typeMap : typeMaps) {
-					for (CarType type : typeMap.values()) {
+				List<Set<CarType>> typeMaps = query.getResultList();
+				for (Set<CarType> typeMap : typeMaps) {
+					for (CarType type : typeMap) {
 						if (type.getName().equals(carType)) {
 							Query query2 = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
 							query2.setParameter("typeKey", type.getKey());

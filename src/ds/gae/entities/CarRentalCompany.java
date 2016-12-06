@@ -33,12 +33,10 @@ public class CarRentalCompany {
 	private Key key;
 	@Basic
 	private String name;
-	//@OneToMany(cascade=CascadeType.ALL)
-	//@OneToMany(cascade = CascadeType.PERSIST)
-	private Set<Car> cars;
+
 	// @Basic
-	@OneToMany(cascade = CascadeType.ALL)
-	private Map<String, CarType> carTypes = new HashMap<String, CarType>();
+	@OneToMany(mappedBy="company",cascade = CascadeType.ALL)
+	private Set<CarType> carTypes = new HashSet<CarType>();
 
 	/***************
 	 * CONSTRUCTOR *
@@ -47,12 +45,11 @@ public class CarRentalCompany {
 
 	}
 
-	public CarRentalCompany(String name, Set<Car> cars) {
+	public CarRentalCompany(String name, Set<CarType> types) {
 		logger.log(Level.INFO, "<{0}> Car Rental Company {0} starting up...", name);
 		setName(name);
-		this.cars = cars;
-		for (Car car : cars)
-			carTypes.put(car.getType().getName(), car.getType());
+		setCarTypes(types);
+
 	}
 
 	public Key getKey() {
@@ -74,37 +71,35 @@ public class CarRentalCompany {
 	/*************
 	 * CAR TYPES *
 	 *************/
-
-	private Map<String, CarType> getCarTypesQuery() {
-		EntityManager em = EMF.get().createEntityManager();
-		try {
-			Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Map.class);
-			query.setParameter("company", this.getKey());
-
-			List<Map<String, CarType>> carTypesList = query.getResultList();
-			if (!carTypesList.isEmpty()) {
-				return carTypesList.get(0);
-			}
-			return null;
-		} finally {
-			em.close();
-		}
+	
+	public void setCarTypes(Set<CarType> types){
+		this.carTypes = types;
+	}
+	
+	public void addCarType(CarType type){
+		carTypes.add(type);
 	}
 
 	public Collection<CarType> getAllCarTypes() {
-		return getCarTypesQuery().values();
+		return carTypes;
 	}
 
 	public CarType getCarType(String carTypeName) {
-		if (getCarTypesQuery().containsKey(carTypeName))
-			return getCarTypesQuery().get(carTypeName);
+		for(CarType type: carTypes){
+			if(type.getName().equals(carTypeName)){
+				return type;
+			}
+		}
 		throw new IllegalArgumentException("<" + carTypeName + "> No car type of name " + carTypeName);
 	}
 
 	public boolean isAvailable(String carTypeName, Date start, Date end) {
 		logger.log(Level.INFO, "<{0}> Checking availability for car type {1}", new Object[] { name, carTypeName });
-		if (getCarTypesQuery().containsKey(carTypeName))
-			return getAvailableCarTypes(start, end).contains(getCarTypesQuery().get(carTypeName));
+		for(CarType type: carTypes){
+			if(type.getName().equals(carTypeName)){
+				return getAvailableCarTypes(start, end).contains(type);
+			}
+		}
 		throw new IllegalArgumentException("<" + carTypeName + "> No car type of name " + carTypeName);
 	}
 
@@ -130,16 +125,13 @@ public class CarRentalCompany {
 		throw new IllegalArgumentException("<" + name + "> No car with uid " + uid);
 	}
 
-	public Set<Car> getCars() {
-		return cars;
-	}
-
+	
 	public Set<Car> getCarsQuery() {
 		EntityManager em = EMF.get().createEntityManager();
 		Query query = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
 		Set<Car> carSet = new HashSet<Car>();
 		try {
-			for (CarType type : getCarTypesQuery().values()) {
+			for (CarType type : carTypes) {
 				query.setParameter("typeKey", type.getKey());
 				List<Set<Car>> carSets = query.getResultList();
 				System.out.print(carSets.size());
@@ -200,13 +192,13 @@ public class CarRentalCompany {
 					+ " are unavailable from " + quote.getStartDate() + " to " + quote.getEndDate());
 		Car car = availableCars.get((int) (Math.random() * availableCars.size()));
 
-		Reservation res = new Reservation(quote, car.getId());
+		Reservation res = new Reservation(quote, car);
 		car.addReservation(res);
 		return res;
 	}
 
 	public void cancelReservation(Reservation res) {
 		logger.log(Level.INFO, "<{0}> Cancelling reservation {1}", new Object[] { name, res.toString() });
-		getCar(res.getCarId()).removeReservation(res);
+		getCar(res.getCar().getId()).removeReservation(res);
 	}
 }

@@ -14,7 +14,7 @@ public class Reservation extends Quote {
 	//@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int resId;
 	@ManyToOne
-    private int carId;
+	private Car car;
     
     /***************
 	 * CONSTRUCTOR *
@@ -24,18 +24,22 @@ public class Reservation extends Quote {
 		
 	}
 
-    public Reservation(Quote quote, int carId) {
+    public Reservation(Quote quote,Car car) {
     	super(quote.getCarRenter(), quote.getStartDate(), quote.getEndDate(), 
     			quote.getRentalCompany(), quote.getCarType(), quote.getRentalPrice());
-        this.carId = carId;
+        this.car = car;
     }
     
     /******
-     * ID *
+     * CAR *
      ******/
     
-    public int getCarId() {
-    	return carId;
+    public Car getCar() {
+    	return car;
+    }
+    
+    public int getCarId(){
+    	return car.getId();
     }
     
     /*************
@@ -45,14 +49,14 @@ public class Reservation extends Quote {
     @Override
     public String toString() {
         return String.format("Reservation for %s from %s to %s at %s\nCar type: %s\tCar: %s\nTotal price: %.2f", 
-                getCarRenter(), getStartDate(), getEndDate(), getRentalCompany(), getCarType(), getCarId(), getRentalPrice());
+                getCarRenter(), getStartDate(), getEndDate(), getRentalCompany(), getCarType(), car.getId(), getRentalPrice());
     }
     
     @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + carId;
+		result = prime * result + car.getId();
 		return result;
 	}
 
@@ -61,7 +65,7 @@ public class Reservation extends Quote {
 		if (!super.equals(obj))
 			return false;
 		Reservation other = (Reservation) obj;
-		if (carId != other.carId)
+		if (car.getId() != other.getCar().getId())
 			return false;
 		return true;
 	}

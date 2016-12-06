@@ -63,12 +63,7 @@ public class CarRentalServletContextListener implements ServletContextListener {
 		EntityManager em = EMF.get().createEntityManager();
 		try {
 
-			Set<Car> cars = loadData(name, datafile);
-			CarRentalCompany company = new CarRentalCompany(name, cars);
-
-			// use persistence instead
-			//CarRentalModel.get().CRCS.put(name, company);
-
+			CarRentalCompany company = loadData(name, datafile);
 			em.persist(company);
 
 		} catch (NumberFormatException ex) {
@@ -82,11 +77,13 @@ public class CarRentalServletContextListener implements ServletContextListener {
 		}
 	}
 
-	public static Set<Car> loadData(String name, String datafile) throws NumberFormatException, IOException {
-		// adapt the implementation of this method to your entity
-		// structure
+
+	public static CarRentalCompany loadData(String name, String datafile) throws NumberFormatException, IOException {
+
+		CarRentalCompany company = new CarRentalCompany();
+		company.setName(name);
 		
-		Set<Car> cars = new HashSet<Car>();
+		//leave it cuz it's needed to create new cars
 		int carId = 1;
 
 		// open file from jar
@@ -105,25 +102,16 @@ public class CarRentalServletContextListener implements ServletContextListener {
 			// create new car type from first 5 fields
 			CarType type = new CarType(csvReader.nextToken(), Integer.parseInt(csvReader.nextToken()),
 					Float.parseFloat(csvReader.nextToken()), Double.parseDouble(csvReader.nextToken()),
-					Boolean.parseBoolean(csvReader.nextToken()));
+					Boolean.parseBoolean(csvReader.nextToken()), company);
 			// create N new cars with given type, where N is the 5th field
 			for (int i = Integer.parseInt(csvReader.nextToken()); i > 0; i--) {
-				cars.add(new Car(carId++, type));
+				type.addCar(new Car(carId++, type));
 			}
-			
-			//Add cars to the corresponding type
-			
-			type.addCars(cars);
-			EntityManager em = EMF.get().createEntityManager();
-			try{
-				em.persist(type);
-			}finally {
-				em.close();
-			}
+			company.addCarType(type);
 			
 		}
 
-		return cars;
+		return company;
 	}
 
 	@Override

@@ -28,8 +28,8 @@ public class Car {
     private int id;
 	@ManyToOne
 	private CarType type;
-	@OneToMany(cascade=CascadeType.ALL,fetch=FetchType.EAGER)
-	private Set<Reservation> reservations;
+	@OneToMany(mappedBy="car",cascade=CascadeType.ALL,fetch=FetchType.EAGER)
+	private Set<Reservation> reservations = new HashSet<Reservation>();
 
     /***************
      * CONSTRUCTOR *

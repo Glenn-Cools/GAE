@@ -1,5 +1,6 @@
 package ds.gae.entities;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.*;
@@ -7,6 +8,7 @@ import javax.persistence.*;
 import com.google.appengine.api.datastore.Key;
 
 import ds.gae.EMF;
+
 
 @Entity
 @NamedQuery(name = "CarType.FindAllCarsForType", query = "SELECT type.cars FROM CarType type WHERE type.key = :typeKey")
@@ -16,7 +18,9 @@ public class CarType {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Key key;
 	@OneToMany(mappedBy="type",cascade=CascadeType.ALL)
-	private Set<Car> cars;
+	private Set<Car> cars = new HashSet<Car>();
+	@ManyToOne
+	private CarRentalCompany company;
 	@Basic
     private String name;
 	@Basic
@@ -36,27 +40,25 @@ public class CarType {
     	
     }
     
-    public CarType(String name, int nbOfSeats, float trunkSpace, double rentalPricePerDay, boolean smokingAllowed) {
+    public CarType(String name, int nbOfSeats, float trunkSpace, double rentalPricePerDay, boolean smokingAllowed,CarRentalCompany company) {
         this.name = name;
         this.nbOfSeats = nbOfSeats;
         this.trunkSpace = trunkSpace;
         this.rentalPricePerDay = rentalPricePerDay;
         this.smokingAllowed = smokingAllowed;
+        this.company = company;
     }
     
     public Key getKey(){
     	return key;
     }
     
-    public void addCars(Set<Car> carSet){
-    	EntityManager em = EMF.get().createEntityManager();
-    	try{
-    		for(Car c : carSet)
-    			em.persist(c);    		
-    	}finally {
-			em.close();
-		}
-    	cars.addAll(carSet);
+    public void addCar(Car car){
+    	cars.add(car);
+    }
+    
+    public CarRentalCompany getCompany(){
+    	return company;
     }
 
     public String getName() {
