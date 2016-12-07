@@ -22,8 +22,7 @@ import ds.gae.ReservationException;
 @Entity
 @NamedQueries({ @NamedQuery(name = "Rental.FindAll", query = "SELECT com FROM CarRentalCompany com"),
 		@NamedQuery(name = "Rental.FindAllCompanyNames", query = "SELECT com.name FROM CarRentalCompany com"),
-		@NamedQuery(name = "Rental.FindAllCarTypesForCompany", query = "SELECT com.carTypes FROM CarRentalCompany com WHERE com.key = :company")
-})
+		@NamedQuery(name = "Rental.FindAllCarTypesForCompany", query = "SELECT com.carTypes FROM CarRentalCompany com WHERE com.key = :company") })
 public class CarRentalCompany {
 
 	private static Logger logger = Logger.getLogger(CarRentalCompany.class.getName());
@@ -33,9 +32,7 @@ public class CarRentalCompany {
 	private Key key;
 	@Basic
 	private String name;
-
-	// @Basic
-	@OneToMany(mappedBy="company",cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
 	private Set<CarType> carTypes = new HashSet<CarType>();
 
 	/***************
@@ -71,22 +68,34 @@ public class CarRentalCompany {
 	/*************
 	 * CAR TYPES *
 	 *************/
-	
-	public void setCarTypes(Set<CarType> types){
+
+	public void setCarTypes(Set<CarType> types) {
 		this.carTypes = types;
 	}
-	
-	public void addCarType(CarType type){
+
+	public void addCarType(CarType type) {
 		carTypes.add(type);
 	}
 
 	public Collection<CarType> getAllCarTypes() {
-		return carTypes;
+		EntityManager em = EMF.get().createEntityManager();
+		Query query = em.createNamedQuery("Rental.FindAllCarTypesForCompany", Set.class);
+		Set<CarType> typeSet = new HashSet<CarType>();
+		try {
+			query.setParameter("company", this.getKey());
+			List<Set<CarType>> typeSets = query.getResultList();
+			if (!typeSets.isEmpty()) {
+				typeSet = typeSets.get(0);
+			}
+			return typeSet;
+		} finally {
+			em.close();
+		}
 	}
 
 	public CarType getCarType(String carTypeName) {
-		for(CarType type: carTypes){
-			if(type.getName().equals(carTypeName)){
+		for (CarType type : getAllCarTypes()) {
+			if (type.getName().equals(carTypeName)) {
 				return type;
 			}
 		}
@@ -95,8 +104,8 @@ public class CarRentalCompany {
 
 	public boolean isAvailable(String carTypeName, Date start, Date end) {
 		logger.log(Level.INFO, "<{0}> Checking availability for car type {1}", new Object[] { name, carTypeName });
-		for(CarType type: carTypes){
-			if(type.getName().equals(carTypeName)){
+		for (CarType type : getAllCarTypes()) {
+			if (type.getName().equals(carTypeName)) {
 				return getAvailableCarTypes(start, end).contains(type);
 			}
 		}
@@ -125,23 +134,17 @@ public class CarRentalCompany {
 		throw new IllegalArgumentException("<" + name + "> No car with uid " + uid);
 	}
 
-	
 	public Set<Car> getCarsQuery() {
 		EntityManager em = EMF.get().createEntityManager();
 		Query query = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
 		Set<Car> carSet = new HashSet<Car>();
 		try {
-			for (CarType type : carTypes) {
+			for (CarType type : getAllCarTypes()) {
 				query.setParameter("typeKey", type.getKey());
 				List<Set<Car>> carSets = query.getResultList();
-				System.out.print(carSets.size());
 				if (!carSets.isEmpty()) {
 					carSet.addAll(carSets.get(0));
 				}
-			}
-			System.out.print("YOOOOOOOOOOOOOLOOOOOOOOOOOOOOOOOOOOOOOO");
-			for(Car c: carSet){
-			System.out.println(c.getId());
 			}
 			return carSet;
 		} finally {
@@ -191,9 +194,23 @@ public class CarRentalCompany {
 			throw new ReservationException("Reservation failed, all cars of type " + quote.getCarType()
 					+ " are unavailable from " + quote.getStartDate() + " to " + quote.getEndDate());
 		Car car = availableCars.get((int) (Math.random() * availableCars.size()));
-
-		Reservation res = new Reservation(quote, car);
-		car.addReservation(res);
+		
+		Reservation res;
+		System.out.println(car.getId());
+		EntityManager em = EMF.get().createEntityManager();
+		try{
+			em.getTransaction().begin();
+			
+			res = new Reservation(quote, car);
+			car.addReservation(res);
+			
+			em.getTransaction().commit();
+		}finally {
+			if(em.getTransaction().isActive()){
+				em.getTransaction().rollback();
+			}
+			em.close();
+		}
 		return res;
 	}
 

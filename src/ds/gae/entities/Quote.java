@@ -1,11 +1,12 @@
 package ds.gae.entities;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.*;
 
 @MappedSuperclass
-public class Quote {
+public class Quote implements Serializable {
 	
 	@Temporal(TemporalType.DATE)
     private Date startDate;

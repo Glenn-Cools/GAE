@@ -11,7 +11,6 @@ public class Reservation extends Quote {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Key key;
 	@Basic
-	//@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int resId;
 	@ManyToOne
 	private Car car;

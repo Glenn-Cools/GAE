@@ -39,8 +39,6 @@ public class CarRentalServletContextListener implements ServletContextListener {
 		// If the Hertz car rental company is in the datastore, we assume the
 		// dummy data is available
 
-		//  use persistence instead
-		//return CarRentalModel.get().CRCS.containsKey("Hertz");
 		EntityManager em = EMF.get().createEntityManager();
 		try {
 			Query query = em.createNamedQuery("Rental.FindAll", CarRentalCompany.class);
