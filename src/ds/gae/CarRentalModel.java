@@ -65,11 +65,11 @@ public class CarRentalModel {
 	 *         given car rental company.
 	 */
 	public Set<String> getCarTypesNames(String crcName) {
-		//System.out.println(crcName);
+		// System.out.println(crcName);
 		Set<String> typeNames = new HashSet<String>();
 		for (CarRentalCompany crc : getAllRentals()) {
 			if (crc.getName().equals(crcName)) {
-				//System.out.println("Name: " + crc.getName());
+				// System.out.println("Name: " + crc.getName());
 				for (CarType type : getAllCarTypes(crc)) {
 					typeNames.add(type.getName());
 				}
@@ -132,18 +132,17 @@ public class CarRentalModel {
 	 */
 	public synchronized Reservation confirmQuote(Quote q) throws ReservationException {
 
-		for (CarRentalCompany crc : getAllRentals()) {
-			if (crc.getName().equals(q.getRentalCompany())) {
-				// TODO PERSIST reservation
-				Reservation res = crc.confirmQuote(q);
-				/*EntityManager em = EMF.get().createEntityManager();
-				try{
+		EntityManager em = EMF.get().createEntityManager();
+		try {
+			for (CarRentalCompany crc : getAllRentals()) {
+				if (crc.getName().equals(q.getRentalCompany())) {
+					Reservation res = crc.confirmQuote(q);
 					em.persist(res);
-				}finally {
-					em.close();
-				}*/
-				return res;
+					return res;
+				}
 			}
+		} finally {
+			em.close();
 		}
 
 		throw new ReservationException("CarRentalCompany not found.");
@@ -180,11 +179,18 @@ public class CarRentalModel {
 
 	public void cancelReservation(Reservation res) {
 
-		for (CarRentalCompany crc : getAllRentals()) {
-			if (crc.getName().equals(res.getRentalCompany())) {
-				// TODO Remove RES from DB
-				crc.cancelReservation(res);
+		EntityManager em = EMF.get().createEntityManager();
+		try {
+			for (CarRentalCompany crc : getAllRentals()) {
+				if (crc.getName().equals(res.getRentalCompany())) {
+					// TODO Remove RES from DB
+					System.out.println("REMOVED");
+					crc.cancelReservation(res);
+					em.remove(res);
+				}
 			}
+		} finally {
+			em.close();
 		}
 
 	}
@@ -199,30 +205,11 @@ public class CarRentalModel {
 	public List<Reservation> getReservations(String renter) {
 		List<Reservation> out = new ArrayList<Reservation>();
 		EntityManager em = EMF.get().createEntityManager();
-		Query query2 = em.createNamedQuery("CarType.FindAllCarsForType", Set.class);
-		Query query3 = em.createNamedQuery("Car.FindAllResForCar", Set.class);
+		Query query = em.createNamedQuery("Reservation.FindAllForRenter", Reservation.class);
+		query.setParameter("renter", renter);
 		try {
-			for (CarRentalCompany crc : getAllRentals()) {
-				for (CarType type : getAllCarTypes(crc)) {
-					query2.setParameter("typeKey", type.getKey());
-					List<Set<Car>> carSets = query2.getResultList();
-					if (!carSets.isEmpty()) {
-						for (Car c : carSets.get(0)) {
-							query3.setParameter("carKey", c.getKey());
-							List<Set<Reservation>> resSets = query3.getResultList();
-							if (!resSets.isEmpty()) {
-								//System.out.println(resSets);
-								for (Reservation r : resSets.get(0)) {
-									if (r.getCarRenter().equals(renter)) {
-										out.add(r);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			return out;
+			List<Reservation> resList = query.getResultList();
+			return resList;
 		} finally {
 			em.close();
 		}
@@ -242,13 +229,6 @@ public class CarRentalModel {
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(crcName)) {
-//					query.setParameter("company", crc.getKey());
-//					List<Set<CarType>> typeSets = query.getResultList();
-//					if (!typeSets.isEmpty()) {
-//						for (CarType type : typeSets.get(0)) {
-//							types.add(type);
-//						}
-//					}
 					types = getAllCarTypes(crc);
 					return types;
 				}

@@ -5,6 +5,7 @@ import javax.persistence.*;
 import com.google.appengine.api.datastore.Key;
 
 @Entity	
+@NamedQuery(name="Reservation.FindAllForRenter",query="SELECT r FROM Reservation r WHERE r.carRenter = :renter")
 public class Reservation extends Quote {
 	
 	@Id

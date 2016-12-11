@@ -38,6 +38,7 @@ public class Car {
 	private int id;
 	@ManyToOne
 	private CarType type;
+	// FIXME reservations for a car aren't getting stored in the table of car for some reason
 	@OneToMany(mappedBy = "car", cascade = CascadeType.ALL)
 	private Set<Reservation> reservations = new HashSet<Reservation>();
 
@@ -79,6 +80,7 @@ public class Car {
 	 ****************/
 
 	public Set<Reservation> getReservations() {
+		// FIXME reservations for a car aren't getting stored in the table of car for some reason
 		Set<Reservation> out = new HashSet<Reservation>();
 		EntityManager em = EMF.get().createEntityManager();
 		Query query3 = em.createNamedQuery("Car.FindAllResForCar", Set.class);
@@ -99,6 +101,7 @@ public class Car {
 			throw new IllegalArgumentException("Illegal given period");
 
 		for (Reservation reservation : getReservations()) {
+			System.out.println("TEST1111111111");
 			if (reservation.getEndDate().before(start) || reservation.getStartDate().after(end))
 				continue;
 			return false;
@@ -107,11 +110,10 @@ public class Car {
 	}
 
 	public void addReservation(Reservation res) {
+		// FIXME reservations for a car aren't getting stored in the table of car for some reason
 		Set<Reservation> newRes = getReservations();
 		newRes.add(res);
-		System.out.println(newRes);
 		reservations =  newRes;
-		//getReservations().add(res);
 	}
 
 	public void removeReservation(Reservation reservation) {

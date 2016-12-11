@@ -194,23 +194,11 @@ public class CarRentalCompany {
 			throw new ReservationException("Reservation failed, all cars of type " + quote.getCarType()
 					+ " are unavailable from " + quote.getStartDate() + " to " + quote.getEndDate());
 		Car car = availableCars.get((int) (Math.random() * availableCars.size()));
-		
-		Reservation res;
-		System.out.println(car.getId());
-		EntityManager em = EMF.get().createEntityManager();
-		try{
-			em.getTransaction().begin();
-			
-			res = new Reservation(quote, car);
-			car.addReservation(res);
-			
-			em.getTransaction().commit();
-		}finally {
-			if(em.getTransaction().isActive()){
-				em.getTransaction().rollback();
-			}
-			em.close();
-		}
+
+		Reservation res = new Reservation(quote, car);
+		// FIXME reservations for a car aren't getting stored in the table of car for some reason
+		car.addReservation(res);
+
 		return res;
 	}
 
