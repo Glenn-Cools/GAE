@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import ds.gae.entities.Car;
@@ -133,16 +134,23 @@ public class CarRentalModel {
 	public synchronized Reservation confirmQuote(Quote q) throws ReservationException {
 
 		EntityManager em = EMF.get().createEntityManager();
+		EntityTransaction tx = em.getTransaction();
 		try {
+			tx.begin();
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(q.getRentalCompany())) {
 					Reservation res = crc.confirmQuote(q);
 					em.persist(res);
+					tx.commit();
 					return res;
 				}
 			}
 		} finally {
+			if(tx.isActive()){
+				tx.rollback();
+			}
 			em.close();
+			
 		}
 
 		throw new ReservationException("CarRentalCompany not found.");
