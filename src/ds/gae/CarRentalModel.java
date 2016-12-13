@@ -66,11 +66,9 @@ public class CarRentalModel {
 	 *         given car rental company.
 	 */
 	public Set<String> getCarTypesNames(String crcName) {
-		// System.out.println(crcName);
 		Set<String> typeNames = new HashSet<String>();
 		for (CarRentalCompany crc : getAllRentals()) {
 			if (crc.getName().equals(crcName)) {
-				// System.out.println("Name: " + crc.getName());
 				for (CarType type : getAllCarTypes(crc)) {
 					typeNames.add(type.getName());
 				}
@@ -188,8 +186,6 @@ public class CarRentalModel {
 		try {
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(res.getRentalCompany())) {
-					// TODO Remove RES from DB
-					System.out.println("REMOVED");
 					Query query = em.createNamedQuery("Reservation.FindResWithKey",Reservation.class);
 					query.setParameter("resKey", res.getKey());
 					List<Reservation> list = query.getResultList();
