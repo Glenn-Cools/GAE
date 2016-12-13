@@ -134,23 +134,17 @@ public class CarRentalModel {
 	public synchronized Reservation confirmQuote(Quote q) throws ReservationException {
 
 		EntityManager em = EMF.get().createEntityManager();
-		EntityTransaction tx = em.getTransaction();
 		try {
-			tx.begin();
 			for (CarRentalCompany crc : getAllRentals()) {
 				if (crc.getName().equals(q.getRentalCompany())) {
 					Reservation res = crc.confirmQuote(q);
 					em.persist(res);
-					tx.commit();
+					em.merge(res.getCar());
 					return res;
 				}
 			}
 		} finally {
-			if(tx.isActive()){
-				tx.rollback();
-			}
 			em.close();
-			
 		}
 
 		throw new ReservationException("CarRentalCompany not found.");
@@ -168,7 +162,11 @@ public class CarRentalModel {
 	 *             One of the quotes cannot be confirmed. Therefore none of the
 	 *             given quotes is confirmed.
 	 */
-	public List<Reservation> confirmQuotes(List<Quote> quotes) throws ReservationException {
+	public void confirmQuotes(List<Quote> quotes) throws ReservationException {
+		
+		
+		
+		
 		ArrayList<Reservation> done = new ArrayList<Reservation>();
 
 		try {
@@ -182,7 +180,6 @@ public class CarRentalModel {
 			done.clear();
 			throw new ReservationException(e.getMessage());
 		}
-		return done;
 	}
 
 	public void cancelReservation(Reservation res) {
@@ -193,8 +190,15 @@ public class CarRentalModel {
 				if (crc.getName().equals(res.getRentalCompany())) {
 					// TODO Remove RES from DB
 					System.out.println("REMOVED");
-					crc.cancelReservation(res);
-					em.remove(res);
+					Query query = em.createNamedQuery("Reservation.FindResWithKey",Reservation.class);
+					query.setParameter("resKey", res.getKey());
+					List<Reservation> list = query.getResultList();
+					Reservation toDelete = list.get(0);
+					crc.cancelReservation(toDelete);
+					Car toUpdate = toDelete.getCar();
+					em.remove(toDelete);
+					em.merge(toUpdate);
+
 				}
 			}
 		} finally {

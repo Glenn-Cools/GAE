@@ -44,6 +44,8 @@ public class ConfirmQuotesServlet extends HttpServlet {
 			resp.sendRedirect(JSPSite.CREATE_QUOTES.url());
 		} catch (ReservationException e) {
 			session.setAttribute("errorMsg", ViewTools.encodeHTML(e.getMessage()));
+			//ToDelete the current quotes if the operation failed
+			session.setAttribute("quotes", new HashMap<String, ArrayList<Quote>>());
 			resp.sendRedirect(JSPSite.RESERVATION_ERROR.url());				
 		}
 	}

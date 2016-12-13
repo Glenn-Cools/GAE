@@ -194,9 +194,8 @@ public class CarRentalCompany {
 			throw new ReservationException("Reservation failed, all cars of type " + quote.getCarType()
 					+ " are unavailable from " + quote.getStartDate() + " to " + quote.getEndDate());
 		Car car = availableCars.get((int) (Math.random() * availableCars.size()));
-
+		System.out.println("car"+ car.getId());
 		Reservation res = new Reservation(quote, car);
-		// FIXME reservations for a car aren't getting stored in the table of car for some reason
 		car.addReservation(res);
 
 		return res;
