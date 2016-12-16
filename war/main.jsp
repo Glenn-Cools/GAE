@@ -125,6 +125,7 @@ for (String crc : CarRentalModel.get().getAllRentalCompanyNames()) {
  %>
 	<h2>Confirmation of Quotes</h2>
 			<div class="formsubmit">
+			 <!-- Redirect the server to /worker instead of confirmQuotes -->
 				<form method="POST" action="/confirmQuotes">
 					<input id="confirmSubmitButton" type="submit" value=" >> Confirm all Quotes<< " />
 				</form>
